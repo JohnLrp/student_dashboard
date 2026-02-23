@@ -13,7 +13,7 @@ import { AiOutlineFileDone } from "react-icons/ai";
 export default function Sidebar() {
   const location = useLocation();
 
-  // Match /subjects/:subjectId
+  // Extract subjectId from URL if present
   const subjectMatch = location.pathname.match(
     /^\/subjects\/([^/]+)/
   );
@@ -24,7 +24,6 @@ export default function Sidebar() {
 
   return (
     <aside className="sidebar">
-      {/* Brand */}
       <div className="sidebar__brand">
         <img src={logo} alt="Logo" className="sidebar__logoCircle" />
         <div>
@@ -34,7 +33,6 @@ export default function Sidebar() {
       </div>
 
       <nav className="sidebar__nav">
-        {/* Dashboard */}
         <NavLink className="sidebar__link" to="/" end>
           <span className="sidebar__icon">
             <MdDashboardCustomize />
@@ -42,7 +40,6 @@ export default function Sidebar() {
           Dashboard
         </NavLink>
 
-        {/* Subject list */}
         <NavLink className="sidebar__link" to="/subjects">
           <span className="sidebar__icon">
             <BsBook />
@@ -50,7 +47,7 @@ export default function Sidebar() {
           Subject
         </NavLink>
 
-        {/* Show dropdown ONLY when inside a specific subject */}
+        {/* Only show submenu when inside a specific subject */}
         {isInsideSpecificSubject && (
           <div className="sidebar__subMenu">
             <NavLink
@@ -83,7 +80,6 @@ export default function Sidebar() {
           </div>
         )}
 
-        {/* Live Sessions */}
         <NavLink className="sidebar__link" to="/live-sessions">
           <span className="sidebar__icon">
             <RiLiveLine />
