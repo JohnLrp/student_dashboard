@@ -13,17 +13,12 @@ import { AiOutlineFileDone } from "react-icons/ai";
 export default function Sidebar() {
   const location = useLocation();
 
-  // Extract subjectId from URL if present
-  const subjectMatch = location.pathname.match(
-    /^\/subjects\/([^/]+)/
-  );
-
-  const subjectId = subjectMatch ? subjectMatch[1] : null;
-
-  const isInsideSpecificSubject = !!subjectId;
+  // ONLY open submenu when current route is inside subjects
+  const isSubjectsActive = location.pathname.startsWith("/subjects");
 
   return (
     <aside className="sidebar">
+      {/* Brand */}
       <div className="sidebar__brand">
         <img src={logo} alt="Logo" className="sidebar__logoCircle" />
         <div>
@@ -32,6 +27,7 @@ export default function Sidebar() {
         </div>
       </div>
 
+      {/* Links */}
       <nav className="sidebar__nav">
         <NavLink className="sidebar__link" to="/" end>
           <span className="sidebar__icon">
@@ -47,34 +43,22 @@ export default function Sidebar() {
           Subject
         </NavLink>
 
-        {/* Only show submenu when inside a specific subject */}
-        {isInsideSpecificSubject && (
+        {/* submenu appears only if subject is active */}
+        {isSubjectsActive && (
           <div className="sidebar__subMenu">
-            <NavLink
-              className="sidebar__subLink"
-              to={`/subjects/${subjectId}/assignments`}
-            >
+            <NavLink className="sidebar__subLink" to="/subjects/assignments">
               <FaClipboardList /> <span>Assignment</span>
             </NavLink>
 
-            <NavLink
-              className="sidebar__subLink"
-              to={`/subjects/${subjectId}/quiz`}
-            >
+            <NavLink className="sidebar__subLink" to="/subjects/quiz">
               <AiOutlineFileDone /> <span>Quiz</span>
             </NavLink>
 
-            <NavLink
-              className="sidebar__subLink"
-              to={`/subjects/${subjectId}/recordings`}
-            >
+            <NavLink className="sidebar__subLink" to="/subjects/recordings">
               <BiVideo /> <span>Recordings</span>
             </NavLink>
 
-            <NavLink
-              className="sidebar__subLink"
-              to={`/subjects/${subjectId}/study-material`}
-            >
+            <NavLink className="sidebar__subLink" to="/subjects/study-material">
               <FaBookOpen /> <span>Study Material</span>
             </NavLink>
           </div>
@@ -90,3 +74,6 @@ export default function Sidebar() {
     </aside>
   );
 }
+
+
+
