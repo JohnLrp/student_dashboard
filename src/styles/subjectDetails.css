@@ -316,3 +316,28 @@
 .activeDot {
   background-color: #4a6cf7;
 }
+
+.teachersScrollWrapper {
+  display: flex;
+  gap: 20px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  padding-bottom: 10px;
+}
+
+.teachersScrollWrapper::-webkit-scrollbar {
+  height: 8px;
+}
+
+.teachersScrollWrapper::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 4px;
+}
+
+.teacherDetailsCard {
+  min-width: 360px;
+  flex-shrink: 0;
+  scroll-snap-align: start;
+  display: flex;
+  justify-content: space-between;
+}
