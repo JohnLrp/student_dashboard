@@ -62,7 +62,7 @@
 .subjectsGrid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
-  gap: 18px;
+  gap: 14px;
   align-items: stretch;
 }
 
