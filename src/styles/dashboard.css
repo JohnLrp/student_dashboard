@@ -428,3 +428,62 @@
     flex: 0 0 calc((100% - 10px) / 2);
   }
 }
+
+.mobileOnly {
+  display: none;
+}
+
+.desktopOnly {
+  display: block;
+}
+
+.mobileSectionContent {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.mobileSectionTopAction {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 10px;
+}
+
+.mobileCalendarCard {
+  margin-top: 0;
+}
+
+@media (max-width: 768px) {
+  .desktopOnly {
+    display: none !important;
+  }
+
+  .mobileOnly {
+    display: block !important;
+  }
+
+  .mobileSectionBody {
+    width: 100%;
+    padding: 0 0 8px;
+  }
+
+  .mobileSectionContent {
+    gap: 10px;
+  }
+
+  .mobileSectionTopAction {
+    margin-bottom: 8px;
+  }
+
+  .mobileCalendarCard {
+    padding: 12px;
+  }
+
+  .sessionCard,
+  .calendarBox,
+  .whiteCard {
+    width: 100%;
+    margin-left: 0;
+    margin-right: 0;
+  }
+}
