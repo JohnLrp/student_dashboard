@@ -103,7 +103,8 @@ export default function AssignmentDetail() {
       </button>
 
       <div className="assignmentDetailHeaderBox">
-        <PageHeader title={assignment.subject || assignment.title} />
+        {/* ✅ FIX 1: Use subject_name from API instead of subject */}
+        <PageHeader title={assignment.subject_name || assignment.title} />
       </div>
 
       <div className="assignmentDetailBodyBox">
@@ -116,6 +117,13 @@ export default function AssignmentDetail() {
                 <p className="submittedTopText">{formatSubmittedTop(submittedAt)}</p>
               )}
             </div>
+
+            {/* ✅ FIX 2: Show teacher name and due date like Figma design */}
+            {assignment.teacher_name && (
+              <p className="assignmentDetailTeacher">
+                {assignment.teacher_name} — {new Date(assignment.due_date).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}
+              </p>
+            )}
 
             <p className="assignmentDetailDue">
               Due Date: {new Date(assignment.due_date).toLocaleDateString("en-GB")}
