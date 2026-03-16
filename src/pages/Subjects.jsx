@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { useCourse } from "../contexts/CourseContext";
 import api from "../api/apiClient";
@@ -8,15 +8,17 @@ import "../styles/subjects.css";
 
 export default function Subjects() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { activeCourse, loading: courseLoading } = useCourse();
 
   const [subjects, setSubjects] = useState([]);
   const [loading, setLoading] = useState(true);
-
   const [searchTerm, setSearchTerm] = useState("");
-  const filteredSubjects = subjects.filter((subject =>
+
+  const filteredSubjects = subjects.filter((subject) =>
     subject.name.toLowerCase().includes(searchTerm.toLowerCase())
-  ));
+  );
+
   useEffect(() => {
     if (courseLoading) return;
 
@@ -29,7 +31,7 @@ export default function Subjects() {
     async function fetchSubjects() {
       try {
         const res = await api.get(`/courses/${activeCourse.id}/subjects/`);
-        setSubjects(res.data);
+        setSubjects(res.data || []);
       } catch (err) {
         console.error("Failed to load subjects", err);
         setSubjects([]);
@@ -42,18 +44,17 @@ export default function Subjects() {
   }, [activeCourse, courseLoading]);
 
   if (loading) return <div>Loading subjects...</div>;
-
   if (!activeCourse) return <div>No course selected.</div>;
 
   return (
     <div className="subjectsPage">
       <div className="subjectsHeaderBox">
-        <PageHeader title="Subjects" onSearch={setSearchTerm}/>
+        <PageHeader title="Subjects" onSearch={setSearchTerm} />
       </div>
 
       <div className="subjectsBodyBox">
         <div className="subjectsGrid">
-          {subjects.length === 0 ? (
+          {filteredSubjects.length === 0 ? (
             <div>No subjects found.</div>
           ) : (
             filteredSubjects.map((subject) => (
@@ -63,10 +64,16 @@ export default function Subjects() {
                 subject={subject.name}
                 teacher={
                   subject.teachers?.length
-                    ? subject.teachers.map(t => t.name).join(", ")
+                    ? subject.teachers.map((t) => t.name).join(", ")
                     : "No teacher assigned"
                 }
-                onClick={() => navigate(`/subjects/${subject.id}`)}
+                onClick={() => {
+                  if (location.pathname === "/assignments") {
+                    navigate(`/subjects/${subject.id}/assignments`);
+                  } else {
+                    navigate(`/subjects/${subject.id}`);
+                  }
+                }}
               />
             ))
           )}
