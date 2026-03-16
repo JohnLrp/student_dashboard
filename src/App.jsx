@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
 import { CourseProvider } from "./contexts/CourseContext";
 
@@ -48,6 +48,9 @@ export default function App() {
 
               {/* SUBJECTS */}
               <Route path="subjects" element={<Subjects />} />
+
+              {/* Redirect old assignments route */}
+              <Route path="assignments" element={<Navigate to="/subjects" replace />} />
 
               {/* SUBJECT DETAILS */}
               <Route
