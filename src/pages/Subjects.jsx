@@ -6,17 +6,18 @@ import SubjectCard from "../components/SubjectCard";
 import PageHeader from "../components/PageHeader";
 import "../styles/subjects.css";
 
-export default function Subjects() {
+export default function Subjects({ mode }) {
   const navigate = useNavigate();
   const { activeCourse, loading: courseLoading } = useCourse();
 
   const [subjects, setSubjects] = useState([]);
   const [loading, setLoading] = useState(true);
-
   const [searchTerm, setSearchTerm] = useState("");
-  const filteredSubjects = subjects.filter((subject =>
+
+  const filteredSubjects = subjects.filter((subject) =>
     subject.name.toLowerCase().includes(searchTerm.toLowerCase())
-  ));
+  );
+
   useEffect(() => {
     if (courseLoading) return;
 
@@ -42,18 +43,20 @@ export default function Subjects() {
   }, [activeCourse, courseLoading]);
 
   if (loading) return <div>Loading subjects...</div>;
-
   if (!activeCourse) return <div>No course selected.</div>;
 
   return (
     <div className="subjectsPage">
       <div className="subjectsHeaderBox">
-        <PageHeader title="Subjects" onSearch={setSearchTerm}/>
+        <PageHeader
+          title={mode === "assignments" ? "Select Subject" : "Subjects"}
+          onSearch={setSearchTerm}
+        />
       </div>
 
       <div className="subjectsBodyBox">
         <div className="subjectsGrid">
-          {subjects.length === 0 ? (
+          {filteredSubjects.length === 0 ? (
             <div>No subjects found.</div>
           ) : (
             filteredSubjects.map((subject) => (
@@ -63,10 +66,14 @@ export default function Subjects() {
                 subject={subject.name}
                 teacher={
                   subject.teachers?.length
-                    ? subject.teachers.map(t => t.name).join(", ")
+                    ? subject.teachers.map((t) => t.name).join(", ")
                     : "No teacher assigned"
                 }
-                onClick={() => navigate(`/subjects/${subject.id}`)}
+                onClick={() =>
+                  mode === "assignments"
+                    ? navigate(`/subjects/${subject.id}/assignments`)
+                    : navigate(`/subjects/${subject.id}`)
+                }
               />
             ))
           )}

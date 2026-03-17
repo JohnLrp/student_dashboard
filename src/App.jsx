@@ -71,68 +71,84 @@ export default function App() {
               <Route path="profile" element={<Profile />} />
               <Route path="change-password" element={<ChangePassword />} />
 
-              {/* Subjects list */}
+              {/* SUBJECTS */}
               <Route path="subjects" element={<Subjects />} />
 
-              {/* ===== ASSIGNMENTS ===== */}
-              <Route path="assignments" element={<SubjectsAssignments />} />
-              <Route
-                path="assignments/:assignmentId"
-                element={<AssignmentDetail />}
-              />
-
-              {/* ===== QUIZ ===== */}
-              <Route path="subjects/quiz" element={<SubjectsQuiz />} />
-              <Route
-                path="subjects/quiz/:subjectId"
-                element={<QuizList />}
-              />
-              <Route
-                path="subjects/quiz/:subjectId/take/:quizId"
-                element={<QuizDetail />}
-              />
-              <Route
-                path="subjects/quiz/:subjectId/result/:quizId"
-                element={<QuizResult />}
-              />
-
-              {/* ===== RECORDINGS ===== */}
-              <Route
-                path="subjects/recordings"
-                element={<SubjectsRecordings />}
-              />
-              <Route
-                path="subjects/recordings/:subjectId/video/:videoId"
-                element={<RecordingDetail />}
-              />
-              <Route
-                path="subjects/recordings/:subjectId"
-                element={<RecordingsList />}
-              />
-
-              {/* ===== STUDY MATERIAL ===== */}
-              <Route
-                path="subjects/study-material"
-                element={<SubjectsStudyMaterial />}
-              />
-              <Route
-                path="subjects/study-material/:subjectId"
-                element={<StudyMaterialList />}
-              />
-
-              {/* ===== GENERIC SUBJECT ROUTE LAST ===== */}
+              {/* SUBJECT DETAILS */}
               <Route
                 path="subjects/:subjectId"
                 element={<SubjectDetails />}
               />
 
-              {/* ===== LIVE SESSIONS ===== */}
+              {/* ASSIGNMENTS → FIRST SHOW SUBJECT LIST */}
+          <Route
+  path="assignments"
+  element={<Subjects mode="assignments" />}
+/>
+
+              {/* ASSIGNMENTS OF A SUBJECT */}
+              <Route
+                path="subjects/:subjectId/assignments"
+                element={<SubjectsAssignments />}
+              />
+
+              {/* ASSIGNMENT DETAIL */}
+              <Route
+                path="subjects/:subjectId/assignments/:assignmentId"
+                element={<AssignmentDetail />}
+              />
+
+              {/* QUIZ */}
+              <Route path="subjects/quiz" element={<SubjectsQuiz />} />
+
+              <Route
+                path="subjects/quiz/:subjectId"
+                element={<QuizList />}
+              />
+
+              <Route
+                path="subjects/quiz/:subjectId/take/:quizId"
+                element={<QuizDetail />}
+              />
+
+              <Route
+                path="subjects/quiz/:subjectId/result/:quizId"
+                element={<QuizResult />}
+              />
+
+              {/* RECORDINGS */}
+              <Route
+                path="subjects/recordings"
+                element={<SubjectsRecordings />}
+              />
+
+              <Route
+                path="subjects/recordings/:subjectId"
+                element={<RecordingsList />}
+              />
+
+              <Route
+                path="subjects/recordings/:subjectId/video/:videoId"
+                element={<RecordingDetail />}
+              />
+
+              {/* STUDY MATERIAL */}
+              <Route
+                path="study-material"
+                element={<SubjectsStudyMaterial />}
+              />
+
+              <Route
+                path="study-material/:subjectId"
+                element={<StudyMaterialList />}
+              />
+
+              {/* LIVE SESSIONS */}
               <Route
                 path="live-sessions"
                 element={<LiveSessions />}
               />
 
-              {/* 🔥 THIS IS THE IMPORTANT FIX */}
               <Route
                 path="live/:id"
                 element={<LiveSessionDetail />}

@@ -1,38 +1,84 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import PageHeader from "../components/PageHeader";
 import "../styles/studyMaterial.css";
+import api from "../api/apiClient";
 
 export default function StudyMaterialList() {
+
   const navigate = useNavigate();
+  const { subjectId } = useParams();
+
   const [chaptersData, setChaptersData] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
-    const mockChaptersData = [
-      { id: 1, name: "Chapter 1", date: "21/01/26", fileUrl: "#" },
-      { id: 2, name: "Chapter 2", date: "22/01/26", fileUrl: "#" },
-      { id: 3, name: "Chapter 3", date: "23/01/26", fileUrl: "#" },
-      { id: 4, name: "Chapter 4", date: "26/01/26", fileUrl: "#" },
-      { id: 5, name: "Chapter 5", date: "26/01/26", fileUrl: "#" },
-    ];
-    setChaptersData(mockChaptersData);
-  }, []);
+
+    if (!subjectId) return;
+
+    api.get(`/materials/subjects/${subjectId}/materials/`)
+      .then((res) => {
+
+        const materials = res.data.map((item) => {
+          const firstFile = item.files?.[0];
+
+          let fileUrl = null;
+
+          if (firstFile?.file) {
+
+            // If backend already returns full URL
+            if (firstFile.file.startsWith("http")) {
+              fileUrl = firstFile.file;
+            } 
+            // Otherwise build correct API media URL
+            else {
+              fileUrl = `https://api.shikshacom.com${firstFile.file}`;
+            }
+
+          }
+
+          return {
+            id: item.id,
+            name: item.title,
+            date: new Date(item.created_at).toLocaleDateString(),
+            fileUrl
+          };
+        });
+
+        setChaptersData(materials);
+
+      })
+      .catch((err) => {
+        console.error("Failed to fetch study materials:", err);
+      });
+
+  }, [subjectId]);
 
   const handleView = (chapter) => {
+    if (!chapter.fileUrl) return;
     window.open(chapter.fileUrl, "_blank");
   };
 
   const handleDownload = (chapter) => {
+    if (!chapter.fileUrl) return;
+
     const link = document.createElement("a");
     link.href = chapter.fileUrl;
-    link.download = `${chapter.name}.pdf`;
+    link.download = chapter.name;
     link.click();
   };
 
+  const filteredChapters = chaptersData.filter((chapter) =>
+    chapter.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   return (
     <div className="studyMaterialPage">
-      <button className="studyMaterialBack" onClick={() => navigate(-1)}>
+
+      <button
+        className="studyMaterialBack"
+        onClick={() => navigate(-1)}
+      >
         &lt; Back
       </button>
 
@@ -46,6 +92,7 @@ export default function StudyMaterialList() {
           {/* Desktop Table */}
           <div className="studyMaterialTableWrap">
             <table className="studyMaterialTable">
+
               <thead>
                 <tr>
                   <th>Name</th>
@@ -53,56 +100,83 @@ export default function StudyMaterialList() {
                   <th></th>
                 </tr>
               </thead>
+
               <tbody>
-                {chaptersData
-                  .filter((chapter) =>
-                    chapter.name.toLowerCase().includes(searchTerm.toLowerCase())
-                  )
-                  .map((chapter) => (
-                    <tr key={chapter.id}>
-                      <td>{chapter.name}</td>
-                      <td>{chapter.date}</td>
-                      <td className="studyMaterialActions">
-                        <button className="studyMaterialViewBtn" onClick={() => handleView(chapter)}>
-                          View
-                        </button>
-                        <button className="studyMaterialDownloadBtn" onClick={() => handleDownload(chapter)}>
-                          Download
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
+                {filteredChapters.map((chapter) => (
+                  <tr key={chapter.id}>
+                    <td>{chapter.name}</td>
+                    <td>{chapter.date}</td>
+
+                    <td className="studyMaterialActions">
+
+                      <button
+                        className="studyMaterialViewBtn"
+                        onClick={() => handleView(chapter)}
+                      >
+                        View
+                      </button>
+
+                      <button
+                        className="studyMaterialDownloadBtn"
+                        onClick={() => handleDownload(chapter)}
+                      >
+                        Download
+                      </button>
+
+                    </td>
+                  </tr>
+                ))}
               </tbody>
+
             </table>
           </div>
 
           {/* Mobile Cards */}
           <div className="studyMaterialMobile">
+
             <div className="studyMaterialMobileHeader">
               <span>Title</span>
               <span>Uploaded On</span>
             </div>
 
-            {chaptersData
-              .filter((chapter) =>
-                chapter.name.toLowerCase().includes(searchTerm.toLowerCase())
-              )
-              .map((chapter) => (
-                <div key={chapter.id} className="studyMaterialCard">
-                  <div className="studyMaterialCardTop">
-                    <p className="studyMaterialCardTitle">{chapter.name}</p>
-                    <p className="studyMaterialCardDate">{chapter.date}</p>
-                  </div>
-                  <div className="studyMaterialCardActions">
-                    <button className="viewBtn" onClick={() => handleView(chapter)}>View</button>
-                    <button className="downloadBtn" onClick={() => handleDownload(chapter)}>Download</button>
-                  </div>
+            {filteredChapters.map((chapter) => (
+              <div key={chapter.id} className="studyMaterialCard">
+
+                <div className="studyMaterialCardTop">
+                  <p className="studyMaterialCardTitle">
+                    {chapter.name}
+                  </p>
+                  <p className="studyMaterialCardDate">
+                    {chapter.date}
+                  </p>
                 </div>
-              ))}
+
+                <div className="studyMaterialCardActions">
+
+                  <button
+                    className="viewBtn"
+                    onClick={() => handleView(chapter)}
+                  >
+                    View
+                  </button>
+
+                  <button
+                    className="downloadBtn"
+                    onClick={() => handleDownload(chapter)}
+                  >
+                    Download
+                  </button>
+
+                </div>
+
+              </div>
+            ))}
+
           </div>
 
         </div>
       </div>
+
     </div>
   );
 }

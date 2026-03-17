@@ -15,17 +15,21 @@ export default function Sidebar({ setMenuOpen }) {
 
   const isSubjectsActive =
     location.pathname.startsWith("/subjects") ||
-    location.pathname.startsWith("/assignments");
+    location.pathname.startsWith("/assignments") ||
+    location.pathname.startsWith("/study-material");
 
   return (
     <aside className="sidebar">
       <div className="sidebar__top">
+
         {/* Brand */}
         <div className="sidebar__brand">
           <img src={logo} alt="Logo" className="sidebar__logoCircle" />
           <div>
             <h2 className="sidebar__title">ShikshaCom</h2>
-            <p className="sidebar__tagline">Empowerment Through Education</p>
+            <p className="sidebar__tagline">
+              Empowerment Through Education
+            </p>
           </div>
         </div>
 
@@ -40,8 +44,9 @@ export default function Sidebar({ setMenuOpen }) {
         </button>
       </div>
 
-      {/* Links */}
       <nav className="sidebar__nav">
+
+        {/* Dashboard */}
         <NavLink
           className="sidebar__link"
           to="/"
@@ -54,6 +59,7 @@ export default function Sidebar({ setMenuOpen }) {
           Dashboard
         </NavLink>
 
+        {/* Subjects */}
         <NavLink
           className="sidebar__link"
           to="/subjects"
@@ -62,19 +68,22 @@ export default function Sidebar({ setMenuOpen }) {
           <span className="sidebar__icon">
             <BsBook />
           </span>
-          Subject
+          Subjects
         </NavLink>
 
         {isSubjectsActive && (
           <div className="sidebar__subMenu">
+
+            {/* Assignments */}
             <NavLink
               className="sidebar__subLink"
               to="/assignments"
               onClick={() => setMenuOpen(false)}
             >
-              <FaClipboardList /> <span>Assignment</span>
+              <FaClipboardList /> <span>Assignments</span>
             </NavLink>
 
+            {/* Quiz */}
             <NavLink
               className="sidebar__subLink"
               to="/subjects/quiz"
@@ -83,6 +92,7 @@ export default function Sidebar({ setMenuOpen }) {
               <AiOutlineFileDone /> <span>Quiz</span>
             </NavLink>
 
+            {/* Recordings */}
             <NavLink
               className="sidebar__subLink"
               to="/subjects/recordings"
@@ -91,16 +101,19 @@ export default function Sidebar({ setMenuOpen }) {
               <BiVideo /> <span>Recordings</span>
             </NavLink>
 
+            {/* Study Material */}
             <NavLink
               className="sidebar__subLink"
-              to="/subjects/study-material"
+              to="/study-material"
               onClick={() => setMenuOpen(false)}
             >
               <FaBookOpen /> <span>Study Material</span>
             </NavLink>
+
           </div>
         )}
 
+        {/* Live sessions */}
         <NavLink
           className="sidebar__link"
           to="/live-sessions"
@@ -111,6 +124,7 @@ export default function Sidebar({ setMenuOpen }) {
           </span>
           Live Sessions
         </NavLink>
+
       </nav>
     </aside>
   );
