@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import api from "../api/apiClient";
 import "../styles/quiz.css";
@@ -15,6 +15,10 @@ export default function QuizDetail() {
 
   // ✅ TIMER STATE
   const [timeLeft, setTimeLeft] = useState(null);
+
+  // ✅ REF (fix auto submit issue)
+  const answersRef = useRef({});
+  const submittedRef = useRef(false);
 
   useEffect(() => {
     async function fetchQuiz() {
@@ -33,11 +37,11 @@ export default function QuizDetail() {
     if (quizId) fetchQuiz();
   }, [quizId]);
 
-  // ✅ TIMER LOGIC
+  // ✅ TIMER LOGIC (default = 5 min)
   useEffect(() => {
     if (!quizData) return;
 
-    const duration = (quizData.duration || 10) * 60;
+    const duration = (quizData.duration || 5) * 60;
 
     let startTime = localStorage.getItem(`quiz_${quizId}_start`);
 
@@ -56,7 +60,11 @@ export default function QuizDetail() {
       if (remaining <= 0) {
         clearInterval(interval);
         setTimeLeft(0);
-        handleAutoSubmit();
+
+        if (!submittedRef.current) {
+          submittedRef.current = true;
+          handleAutoSubmit();
+        }
       } else {
         setTimeLeft(remaining);
       }
@@ -66,13 +74,17 @@ export default function QuizDetail() {
   }, [quizData]);
 
   const handleAnswerChange = (questionId, choiceId) => {
-    setAnswers((prev) => ({ ...prev, [questionId]: choiceId }));
+    setAnswers((prev) => {
+      const updated = { ...prev, [questionId]: choiceId };
+      answersRef.current = updated; // ✅ keep latest answers
+      return updated;
+    });
   };
 
-  // ✅ AUTO SUBMIT
+  // ✅ AUTO SUBMIT (fixed)
   const handleAutoSubmit = async () => {
     try {
-      const formattedAnswers = Object.entries(answers).map(
+      const formattedAnswers = Object.entries(answersRef.current).map(
         ([questionId, choiceId]) => ({
           question: questionId,
           selected_choice: choiceId,
@@ -103,8 +115,8 @@ export default function QuizDetail() {
 
       await api.post(`student/quizzes/${quizId}/submit/`, { answers: formattedAnswers });
 
-      // ✅ CLEAR TIMER
       localStorage.removeItem(`quiz_${quizId}_start`);
+      submittedRef.current = true;
 
       navigate(`/subjects/quiz/${subjectId}/result/${quizId}`);
     } catch (err) {
@@ -129,10 +141,7 @@ export default function QuizDetail() {
       <div className="quizActiveHeaderBox">
         <h2 className="quizPendingHeaderTitle">{quizData.subject_name}</h2>
 
-        {/* ✅ NEW WRAPPER */}
         <div className="quizSearchWrapper">
-          
-          {/* ✅ TIMER LEFT */}
           {timeLeft !== null && (
             <div className="quizTimer">
               <span className="quizTimerIcon">⏱</span>
@@ -143,7 +152,6 @@ export default function QuizDetail() {
             </div>
           )}
 
-          {/* EXISTING SEARCH */}
           <div className="quizSearch">
             <input placeholder="Search..." />
             <span className="quizSearchIcon">🔍</span>
