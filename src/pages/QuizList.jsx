@@ -84,9 +84,9 @@ export default function QuizList() {
 
   return (
     <div className="quizListPage">
-      <button className="quizBackHeader" onClick={() => navigate(`/subjects/${subjectId}`)}>
-        &lt; Back
-      </button>
+      <button className="quizBackHeader" onClick={() => navigate(`/subjects/quiz`)}>
+  &lt; Back
+</button>
 
       <div className="quizListHeaderBox">
         <div className="quizListHeaderRow">
