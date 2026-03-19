@@ -134,7 +134,7 @@ export default function QuizDetail() {
 
   return (
     <div className="quizActivePage">
-      <button className="quizBackHeader" onClick={() => navigate(-1)}>
+      <button className="quizBackHeader" onClick={() => navigate(`/subjects/quiz/${subjectId}`)}>
         &lt; Back
       </button>
 
