@@ -11,7 +11,6 @@ const S = {
   MARKED_ANSWERED: "mka",
 };
 
-// map status → CSS class name
 const palClass = (status) => {
   switch (status) {
     case S.ANSWERED:        return "answered";
@@ -40,23 +39,32 @@ export default function QuizDetail() {
   const durationRef  = useRef(null);
   const startTimeRef = useRef(null);
 
-  // ── fetch ────────────────────────────────────────────────────────────────
+  // ── start quiz + fetch ───────────────────────────────────────────────────
   useEffect(() => {
-    async function fetchQuiz() {
+    async function initQuiz() {
       try {
         setLoading(true);
         setError(null);
+
+        // call start endpoint first
+        try {
+          await api.post(`/quizzes/${quizId}/start/`);
+        } catch (err) {
+          console.error("Start quiz failed:", err.response?.data);
+        }
+
         const res = await api.get(`/quizzes/${quizId}/`);
         setQuizData(res.data);
 
+        // init palette
         const init = {};
         res.data.questions.forEach((q, i) => {
           init[q.id] = i === 0 ? S.NOT_ANSWERED : S.NOT_VISITED;
         });
         setPalette(init);
 
+        // init timer refs
         durationRef.current = (res.data.time_limit_minutes || 5) * 60;
-
         let st = localStorage.getItem(`quiz_${quizId}_start`);
         if (!st) {
           st = Date.now();
@@ -74,10 +82,11 @@ export default function QuizDetail() {
         setLoading(false);
       }
     }
-    if (quizId) fetchQuiz();
+
+    if (quizId) initQuiz();
   }, [quizId]);
 
-  // ── auto-submit ───────────────────────────────────────────────────────────
+  // ── auto-submit (stable with useCallback) ────────────────────────────────
   const handleAutoSubmit = useCallback(async () => {
     try {
       const formatted = Object.entries(answersRef.current).map(([q, c]) => ({
@@ -86,10 +95,12 @@ export default function QuizDetail() {
       await api.post(`/student/quizzes/${quizId}/submit/`, { answers: formatted });
       localStorage.removeItem(`quiz_${quizId}_start`);
       navigate(`/subjects/quiz/${subjectId}/result/${quizId}`);
-    } catch (err) { console.error("Auto submit failed", err); }
+    } catch (err) {
+      console.error("Auto submit failed", err);
+    }
   }, [quizId, subjectId, navigate]);
 
-  // ── timer ─────────────────────────────────────────────────────────────────
+  // ── timer (runs once, no reload loop) ────────────────────────────────────
   useEffect(() => {
     if (durationRef.current === null || startTimeRef.current === null) return;
     const interval = setInterval(() => {
@@ -158,7 +169,8 @@ export default function QuizDetail() {
   const handleSubmit = async () => {
     if (!allAnswered) { setError("Please answer all questions before submitting."); return; }
     try {
-      setSubmitting(true); setError(null);
+      setSubmitting(true);
+      setError(null);
       const formatted = Object.entries(answers).map(([q, c]) => ({
         question: q, selected_choice: c,
       }));
@@ -167,8 +179,11 @@ export default function QuizDetail() {
       submittedRef.current = true;
       navigate(`/subjects/quiz/${subjectId}/result/${quizId}`);
     } catch (err) {
+      console.log("FULL ERROR:", err.response?.data);
       setError(err.response?.data?.detail || "Failed to submit quiz.");
-    } finally { setSubmitting(false); }
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   // ── guards ────────────────────────────────────────────────────────────────
@@ -246,13 +261,11 @@ export default function QuizDetail() {
         {/* RIGHT: sidebar */}
         <div className="quiz-sidebar">
 
-          {/* timer */}
           <div className="quiz-timer-box">
             <div className="quiz-timer-label">Time Left</div>
             <div className="quiz-timer-value">{timeLeft !== null ? fmtTime(timeLeft) : "--:--:--"}</div>
           </div>
 
-          {/* legend */}
           <div className="quiz-legend-box">
             {[
               ["#4caf50", "Answered"],
@@ -262,14 +275,13 @@ export default function QuizDetail() {
               ["#9c27b0", "Answered & Marked"],
             ].map(([bg, lbl]) => (
               <div key={lbl} className="quiz-legend-row">
-                <span className="quiz-legend-dot" style={{ background: bg,
-                  border: bg === "#fff" ? "1px solid #aaa" : "none" }} />
+                <span className="quiz-legend-dot"
+                  style={{ background: bg, border: bg === "#fff" ? "1px solid #aaa" : "none" }} />
                 <span style={{ fontSize: 11 }}>{lbl}</span>
               </div>
             ))}
           </div>
 
-          {/* palette */}
           <div className="quiz-palette-header">Questions Palette</div>
           <div className="quiz-palette">
             {quizData.questions.map((qq, i) => (
@@ -283,7 +295,6 @@ export default function QuizDetail() {
             ))}
           </div>
 
-          {/* submit */}
           <button
             className="quiz-btn-submit"
             onClick={handleSubmit}
