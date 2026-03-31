@@ -10,7 +10,7 @@ import "../styles/dashboard.css";
 
 export default function Dashboard() {
   const { activeCourse } = useCourse();
-
+  const [selectedDate, setSelectedDate] = useState(null);
   const [showAllSessions, setShowAllSessions] = useState(false);
   const [showAssignments, setShowAssignments] = useState(true);
   const [showQuizzes, setShowQuizzes] = useState(true);
@@ -108,6 +108,15 @@ export default function Dashboard() {
       ? schedule
       : schedule.filter((s) => s.type === scheduleFilter);
 
+  const assignmentDates = new Set(
+    assignments
+      .filter((a) => a.due)
+      .map((a) => {
+        const d = new Date(a.due);
+        return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+      })
+  );
+
   const renderMobileSection = () => {
     switch (activeMobileTab) {
       case "sessions":
@@ -178,15 +187,31 @@ export default function Dashboard() {
                   currMonth === today.getMonth() &&
                   currYear === today.getFullYear();
 
+                const isSelected =
+                  selectedDate &&
+                  selectedDate.day === day &&
+                  selectedDate.month === currMonth &&
+                  selectedDate.year === currYear;
+
+                const dateKey = `${currYear}-${currMonth}-${day}`;
+                const hasAssignment = assignmentDates.has(dateKey);
+
                 return (
                   <div
                     key={day}
-                    className={`calDate ${isToday ? "calRed" : ""}`}
+                    className={`calDate ${isToday ? "calRed" : ""} ${isSelected ? "calSelected" : ""}`}
+                    onClick={() => setSelectedDate({ day, month: currMonth, year: currYear })}
                   >
                     {day}
+                    {hasAssignment && !isSelected && !isToday && (
+                      <div className="calDate__dots">
+                        <span className="calDate__dot calDate__dot--assignments" />
+                      </div>
+                    )}
                   </div>
                 );
               })}
+
             </div>
           </div>
         );
@@ -386,15 +411,31 @@ export default function Dashboard() {
                   currMonth === today.getMonth() &&
                   currYear === today.getFullYear();
 
+                const isSelected =
+                  selectedDate &&
+                  selectedDate.day === day &&
+                  selectedDate.month === currMonth &&
+                  selectedDate.year === currYear;
+
+                const dateKey = `${currYear}-${currMonth}-${day}`;
+                const hasAssignment = assignmentDates.has(dateKey);
+
                 return (
                   <div
                     key={day}
-                    className={`calDate ${isToday ? "calRed" : ""}`}
+                    className={`calDate ${isToday ? "calRed" : ""} ${isSelected ? "calSelected" : ""}`}
+                    onClick={() => setSelectedDate({ day, month: currMonth, year: currYear })}
                   >
                     {day}
+                    {hasAssignment && !isSelected && !isToday && (
+                      <div className="calDate__dots">
+                        <span className="calDate__dot calDate__dot--assignments" />
+                      </div>
+                    )}
                   </div>
                 );
               })}
+
             </div>
           </div>
         </div>
