@@ -200,44 +200,83 @@ export default function AssignmentDetail() {
           ) : (
             /* ✅ ONLY THIS BLOCK CHANGED */
             <CompletedAssignment
-              assignment={{
-                title: assignment.title,
-                subject: assignment.subject,
-                chapter: assignment.chapter,
-                teacher: assignment.teacher,
-                className: assignment.class_name,
+  assignment={{
+    title: assignment.title,
 
-                description: assignment.description,
+    // ✅ FIX SUBJECT
+    subject:
+      assignment.subject_name ||
+      assignment.subject ||
+      "",
 
-                assignedOn: new Date(
-                  assignment.created_at || assignment.due_date
-                ).toLocaleDateString(),
+    chapter: assignment.chapter || "",
 
-                dueDate: new Date(assignment.due_date).toLocaleDateString(),
+    // ✅ FIX TEACHER
+    teacher:
+      assignment.teacher_name ||
+      assignment.teacher ||
+      "",
 
-                teacherFile: {
-                  name: assignment.attachment?.split("/").pop(),
-                  size: "—",
-                  url: assignment.attachment,
-                },
+    className: assignment.class_name || "",
 
-                submittedOn: formatSmallDate(submittedAt),
+    description: assignment.description,
 
-                submissionStatus: "On time",
+    // ✅ FIX ASSIGNED DATE (NO FALLBACK)
+    assignedOn: assignment.created_at
+      ? new Date(assignment.created_at).toLocaleDateString("en-GB")
+      : "",
 
-                submittedFile: {
-                  name:
-                    assignment?.submitted_file?.split("/").pop() ||
-                    "Submitted File",
-                  size: "—",
-                  type: "Document",
-                  url:
-                    assignment?.submitted_file ||
-                    assignment?.file ||
-                    assignment?.submission_file,
-                },
-              }}
-            />
+    // ✅ FIX DUE DATE
+    dueDate: assignment.due_date
+      ? new Date(assignment.due_date).toLocaleDateString("en-GB")
+      : "",
+
+    // ✅ FIX TEACHER FILE SAFE
+    teacherFile: assignment.attachment
+      ? {
+          name: assignment.attachment.split("/").pop(),
+          size: "—",
+          url: assignment.attachment,
+        }
+      : null,
+
+    submittedOn: formatSmallDate(submittedAt),
+
+    submissionStatus: "On time",
+
+    // ✅ FIX FILE TYPE + URL
+    submittedFile:
+      assignment?.submitted_file ||
+      assignment?.file ||
+      assignment?.submission_file
+        ? {
+            name: (
+              assignment?.submitted_file ||
+              assignment?.file ||
+              assignment?.submission_file
+            )
+              .split("/")
+              .pop(),
+
+            size: "—",
+
+            type: (
+              assignment?.submitted_file ||
+              assignment?.file ||
+              assignment?.submission_file
+            )
+              .split(".")
+              .pop()
+              .toUpperCase(),
+
+            url:
+              assignment?.submitted_file ||
+              assignment?.file ||
+              assignment?.submission_file,
+          }
+        : null,
+  }}
+/>
           )}
 
         </div>
