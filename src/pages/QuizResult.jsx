@@ -61,25 +61,36 @@ export default function QuizResult() {
       </button>
 
       {/* ── Header with action buttons alongside search ── */}
-      <div className="quizResultHeaderBox">
-        <div className="quizResultHeaderInner">
-          <PageHeader title={resultData.subject_name} />
-          <div className="quizResultHeaderBtns">
-            <button
-              className="quizResultBackBtn"
-              onClick={() => navigate(`/subjects/quiz/${subjectId}`)}
-            >
-              ← Back to Quizzes
-            </button>
-            <button
-              className="quizResultReattemptBtn"
-              onClick={() => setShowReattemptModal(true)}
-            >
-              🔁 Reattempt Quiz
-            </button>
-          </div>
-        </div>
+     <div className="quizResultHeaderBox">
+  <div className="quizResultHeaderInner">
+    <PageHeader title={resultData.subject_name} />
+
+    <div className="quizResultHeaderRow">
+      {/* SEARCH */}
+      <div className="quizSearch">
+        <input type="text" placeholder="Search questions..." />
+        <span className="quizSearchIcon">🔍</span>
       </div>
+
+      {/* BUTTONS BELOW SEARCH */}
+      <div className="quizResultHeaderBtns">
+        <button
+          className="quizResultBackBtn"
+          onClick={() => navigate(`/subjects/quiz/${subjectId}`)}
+        >
+          ← Back to Quizzes
+        </button>
+
+        <button
+          className="quizResultReattemptBtn"
+          onClick={() => setShowReattemptModal(true)}
+        >
+          🔁 Reattempt Quiz
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
 
       <div className="quizResultBodyBox">
 
@@ -163,31 +174,26 @@ export default function QuizResult() {
       </div>
 
       {/* ── Reattempt Confirmation Modal ── */}
-      {showReattemptModal && (
-        <div className="quizModalOverlay">
-          <div className="quizModalBox">
-            <h3>Reattempt Quiz?</h3>
-            <p>
-              Starting a new attempt will <strong>permanently overwrite</strong> your
-              current result. This action cannot be undone.
-            </p>
-            <div className="quizModalActions">
-              <button
-                className="cancelBtn"
-                onClick={() => setShowReattemptModal(false)}
-              >
-                Cancel
-              </button>
-              <button
-                className="startbtn"
-                onClick={handleReattempt}
-              >
-                Yes, Reattempt
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+{showReattemptModal && (
+  <div className="quizModalOverlay">
+    <div className="quizModalBox">
+      <h3>Reattempt Quiz?</h3>
+      <p>
+        You are currently attempting this quiz.
+        <br /><br />
+        ⚠️ Your progress will be lost if you exit.
+      </p>
+      <div className="quizModalActions">
+        <button className="quiz-btn-cancel" onClick={() => setShowReattemptModal(false)}>
+          Cancel
+        </button>
+        <button className="quiz-btn-exit" onClick={handleReattempt}>
+          Yes, Reattempt
+        </button>
+      </div>
+    </div>
+  </div>
+)}
     </div>
   );
 }
