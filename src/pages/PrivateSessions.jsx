@@ -158,7 +158,9 @@ function SessionDetail({ session, onBack, onCancel, onEnterRoom }) {
 
   return (
     <div className="ps__detail">
-      <button className="ps__backBtn" onClick={onBack}>← Back</button>
+      <div className="ps__sidebarBack">
+        <button className="ps__backBtn" onClick={onBack}>‹ Back to Sessions</button>
+      </div>
       <div className={`ps__statusBar ${isLive ? "ps__statusBar--live" : "ps__statusBar--upcoming"}`}>
         <span>
           {isLive
@@ -229,7 +231,9 @@ function RequestDetail({ session, onBack, onCancel, onConfirmReschedule, onDecli
 
   return (
     <div className="ps__detail">
-      <button className="ps__backBtn" onClick={onBack}>← Back</button>
+      <div className="ps__sidebarBack">
+        <button className="ps__backBtn" onClick={onBack}>‹ Back to Sessions</button>
+      </div>
 
       <div className="ps__statusBar ps__statusBar--pending">
         <span>STATUS: {isPending ? "PENDING APPROVAL" : "NEEDS RECONFIRMATION"}</span>
@@ -327,7 +331,9 @@ function RequestDetail({ session, onBack, onCancel, onConfirmReschedule, onDecli
 function HistoryDetail({ session, onBack }) {
   return (
     <div className="ps__detail">
-      <button className="ps__backBtn" onClick={onBack}>← Back</button>
+      <div className="ps__sidebarBack">
+        <button className="ps__backBtn" onClick={onBack}>‹ Back to Sessions</button>
+      </div>
 
       <div className={`ps__statusBar ps__statusBar--${statusCls(session.status)}`}>
         <span>STATUS: {statusLabel(session.status).toUpperCase()}</span>
@@ -404,7 +410,7 @@ function HistoryDetail({ session, onBack }) {
 /* ═══════════════════════════════════════════════════════════
    SCHEDULED TAB
 ═══════════════════════════════════════════════════════════ */
-function ScheduledTab({ onEnterRoom }) {
+function ScheduledTab({ onEnterRoom, searchTerm = "" }) {
   const [sessions, setSessions] = useState([]);
   const [selected, setSelected] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -431,10 +437,20 @@ function ScheduledTab({ onEnterRoom }) {
 
   if (loading) return <div style={{ padding: 20 }}>Loading sessions...</div>;
 
+  const searchFilter = (items) => {
+    if (!searchTerm.trim()) return items;
+    const q = searchTerm.toLowerCase();
+    return items.filter((s) =>
+      (s.subject || "").toLowerCase().includes(q) ||
+      (s.teacher || "").toLowerCase().includes(q) ||
+      (s.topic || "").toLowerCase().includes(q)
+    );
+  };
+
   const reconfirm = sessions.filter((s) => s.status === "needs_reconfirmation");
-  const active = sessions.filter((s) =>
+  const active = searchFilter(sessions.filter((s) =>
     ["approved", "ongoing", "needs_reconfirmation"].includes(s.status)
-  );
+  ));
 
   if (selected) {
     return (
@@ -468,7 +484,7 @@ function ScheduledTab({ onEnterRoom }) {
       ))}
 
       {active.length === 0 ? (
-        <div className="ps__empty"><div className="ps__emptyIcon">📭</div><p>No scheduled sessions.</p></div>
+        <div className="ps__empty"><div className="ps__emptyIcon">📭</div><p>{searchTerm ? "No sessions match your search." : "No scheduled sessions."}</p></div>
       ) : (
         <div className="ps__cardGrid">
           {active.map((s) => (
@@ -518,7 +534,7 @@ function RequestedCard({ item, onClick }) {
 /* ═══════════════════════════════════════════════════════════
    REQUESTS TAB
 ═══════════════════════════════════════════════════════════ */
-function RequestsTab({ onUnreadChange }) {
+function RequestsTab({ onUnreadChange, searchTerm = "" }) {
   const [requests, setRequests] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [selected, setSelected] = useState(null);
@@ -577,22 +593,34 @@ function RequestsTab({ onUnreadChange }) {
     );
   }
 
+  const searchFilter = (items) => {
+    if (!searchTerm.trim()) return items;
+    const q = searchTerm.toLowerCase();
+    return items.filter((s) =>
+      (s.subject || "").toLowerCase().includes(q) ||
+      (s.teacher || "").toLowerCase().includes(q) ||
+      (s.topic || "").toLowerCase().includes(q)
+    );
+  };
+
+  const filteredRequests = searchFilter(requests);
+
   return (
     <div>
       <div className="ps__reqHeader">
         <span className="ps__reqCount">
-          {requests.length} request{requests.length !== 1 ? "s" : ""}
+          {filteredRequests.length} request{filteredRequests.length !== 1 ? "s" : ""}
         </span>
         <button className="ps__requestBtn" onClick={() => setShowForm(true)}>
           + Request Private Session
         </button>
       </div>
 
-      {requests.length === 0 ? (
-        <div className="ps__empty"><div className="ps__emptyIcon">📋</div><p>No pending requests.</p></div>
+      {filteredRequests.length === 0 ? (
+        <div className="ps__empty"><div className="ps__emptyIcon">📋</div><p>{searchTerm ? "No requests match your search." : "No pending requests."}</p></div>
       ) : (
         <div className="ps__reqGrid">
-          {requests.map((r) => (
+          {filteredRequests.map((r) => (
             <RequestedCard key={r.id} item={r} onClick={() => setSelected(r)} />
           ))}
         </div>
@@ -688,17 +716,53 @@ function RequestForm({ onBack, onSubmit }) {
 function Step1({ data, setData }) {
   const [teachers, setTeachers] = useState([]);
   const [loadingTeachers, setLoadingTeachers] = useState(false);
+  const [subjects, setSubjects] = useState(privateSession.SUBJECTS);
+  const [loadingSubjects, setLoadingSubjects] = useState(true);
+
+  // Fetch subjects dynamically from backend, fallback to hardcoded list
+  useEffect(() => {
+    setLoadingSubjects(true);
+    privateSession.getSubjectsByCourse()
+      .then((res) => {
+        // API may return array of strings, array of {name}, or grouped object
+        let list = [];
+        if (Array.isArray(res)) {
+          list = res.map((s) => (typeof s === "string" ? s : s.name || s.subject_name || String(s)));
+        } else if (res && typeof res === "object") {
+          // Grouped by course — flatten all subjects
+          Object.values(res).forEach((arr) => {
+            if (Array.isArray(arr)) arr.forEach((s) => list.push(typeof s === "string" ? s : s.name || String(s)));
+          });
+        }
+        if (list.length > 0) {
+          const unique = [...new Set(list)].sort();
+          setSubjects(unique);
+          // If current subject not in new list, reset to first
+          if (!unique.includes(data.subject)) {
+            setData((prev) => ({ ...prev, subject: unique[0], teacher: null }));
+          }
+        }
+      })
+      .catch(() => { /* keep fallback SUBJECTS */ })
+      .finally(() => setLoadingSubjects(false));
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
   useEffect(() => {
     setLoadingTeachers(true);
     privateSession.getTeachers(data.subject).then((list) => { setTeachers(list); setLoadingTeachers(false); }).catch(() => setLoadingTeachers(false));
   }, [data.subject]);
+
   return (
     <div>
       <div className="ps__fieldRow" style={{ alignItems: "center" }}>
         <label className="ps__fieldLabel">Subject :</label>
-        <select className="ps__select" value={data.subject} onChange={(e) => setData({ ...data, subject: e.target.value, teacher: null })}>
-          {privateSession.SUBJECTS.map((s) => <option key={s}>{s}</option>)}
-        </select>
+        {loadingSubjects ? (
+          <span style={{ fontSize: 13, color: "#6b7280" }}>Loading subjects...</span>
+        ) : (
+          <select className="ps__select" value={data.subject} onChange={(e) => setData({ ...data, subject: e.target.value, teacher: null })}>
+            {subjects.map((s) => <option key={s}>{s}</option>)}
+          </select>
+        )}
       </div>
       <div className="ps__sectionLabel">Teachers for {data.subject} :</div>
       {loadingTeachers ? (<div style={{ padding: 20, color: "#6b7280" }}>Loading teachers...</div>
@@ -799,7 +863,7 @@ function Step4({ data, displayName }) {
 /* ═══════════════════════════════════════════════════════════
    HISTORY TAB — cards are now clickable
 ═══════════════════════════════════════════════════════════ */
-function HistoryTab() {
+function HistoryTab({ searchTerm = "" }) {
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("all");
@@ -809,7 +873,17 @@ function HistoryTab() {
     privateSession.getSessions("history").then((data) => { setHistory(data); setLoading(false); }).catch(() => setLoading(false));
   }, []);
 
-  const filtered = filter === "all" ? history : history.filter(h => h.status === filter);
+  const searchFilter = (items) => {
+    if (!searchTerm.trim()) return items;
+    const q = searchTerm.toLowerCase();
+    return items.filter((s) =>
+      (s.subject || "").toLowerCase().includes(q) ||
+      (s.teacher || "").toLowerCase().includes(q) ||
+      (s.topic || "").toLowerCase().includes(q)
+    );
+  };
+
+  const filtered = searchFilter(filter === "all" ? history : history.filter(h => h.status === filter));
 
   if (loading) return <div style={{ padding: 20 }}>Loading history...</div>;
 
@@ -834,7 +908,7 @@ function HistoryTab() {
       </div>
 
       {filtered.length === 0 ? (
-        <div className="ps__empty"><div className="ps__emptyIcon">📜</div><p>{filter === "all" ? "No session history yet." : "No sessions match this filter."}</p></div>
+        <div className="ps__empty"><div className="ps__emptyIcon">📜</div><p>{searchTerm || filter !== "all" ? "No sessions match your search/filter." : "No session history yet."}</p></div>
       ) : (
         <div className="ps__historyList">
           {filtered.map((h) => (
@@ -866,6 +940,7 @@ export default function PrivateSessions() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("scheduled");
   const [requestsUnread, setRequestsUnread] = useState(0);
+  const [searchTerm, setSearchTerm] = useState("");
 
   const handleEnterRoom = (session) => {
     navigate(`/private-session/live/${session.id}`);
@@ -892,10 +967,23 @@ export default function PrivateSessions() {
             </button>
           ))}
         </div>
+
+        {/* Search bar */}
+        <div className="ps__searchWrap">
+          <span className="ps__searchIcon">🔍</span>
+          <input
+            type="text"
+            className="ps__searchInput"
+            placeholder="Search by subject, teacher, or topic..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+
         <div className="ps__tabContent">
-          {activeTab === "scheduled" && <ScheduledTab onEnterRoom={handleEnterRoom} />}
-          {activeTab === "requests" && <RequestsTab onUnreadChange={setRequestsUnread} />}
-          {activeTab === "history" && <HistoryTab />}
+          {activeTab === "scheduled" && <ScheduledTab onEnterRoom={handleEnterRoom} searchTerm={searchTerm} />}
+          {activeTab === "requests" && <RequestsTab onUnreadChange={setRequestsUnread} searchTerm={searchTerm} />}
+          {activeTab === "history" && <HistoryTab searchTerm={searchTerm} />}
         </div>
       </div>
     </div>

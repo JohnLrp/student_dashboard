@@ -1,33 +1,10 @@
-import { useLocalParticipant, useRoomContext } from "@livekit/components-react";
+import { useLocalParticipant } from "@livekit/components-react";
 import { useEffect, useRef, useState } from "react";
 
-export default function ChatPanel({ role }) {
+export default function ChatPanel({ role, messages = [], onSendMessage }) {
   const { localParticipant } = useLocalParticipant();
-  const room = useRoomContext();
-  const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const bottomRef = useRef(null);
-
-  useEffect(() => {
-    const handleData = (payload, participant) => {
-      const text = new TextDecoder().decode(payload);
-
-      try {
-        const msg = JSON.parse(text);
-        if (msg.type === "raise-hand") return; // don't show in chat
-      } catch {}
-
-      const displayName = participant?.name || participant?.identity || "Unknown";
-
-      setMessages((prev) => [
-        ...prev,
-        { sender: displayName, text },
-      ]);
-    };
-
-    room.on("dataReceived", handleData);
-    return () => room.off("dataReceived", handleData);
-  }, [room]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -37,12 +14,7 @@ export default function ChatPanel({ role }) {
     if (!input.trim()) return;
 
     try {
-      const encoder = new TextEncoder();
-      await localParticipant.publishData(encoder.encode(input), {
-        reliable: true,
-      });
-
-      setMessages((prev) => [...prev, { sender: "You", text: input }]);
+      await onSendMessage(input);
       setInput("");
     } catch (e) {
       console.error("❌ sendMessage failed", e);

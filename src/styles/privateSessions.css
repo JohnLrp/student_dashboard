@@ -334,19 +334,32 @@
   box-shadow: 0 2px 14px rgba(0,0,0,0.07);
 }
 
+/* Back button wrapper — positioned above the detail card */
+.ps__sidebarBack {
+  padding: 12px 20px 0;
+}
+
 .ps__backBtn {
-  background: var(--ps-accent);
+  background: none;
   border: none;
-  padding: 5px 12px;
+  padding: 6px 10px;
   border-radius: 6px;
-  font-size: 12px;
+  font-size: 13px;
   cursor: pointer;
   -webkit-user-select: none;
   user-select: none;
   font-weight: 600;
-  color: white;
-  margin: 16px 20px 0;
+  color: var(--ps-primary);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   font-family: inherit;
+  transition: background 0.2s, color 0.2s;
+}
+
+.ps__backBtn:hover {
+  background: var(--ps-accent-light);
+  color: var(--ps-primary-dark);
 }
 
 .ps__statusBar {
@@ -618,6 +631,7 @@
   display: flex; justify-content: space-between; align-items: flex-start;
   background: #f9fafb; border-radius: 10px; padding: 16px 20px;
   border: 1px solid var(--ps-border); gap: 20px; flex-wrap: wrap;
+  height: auto; min-height: 0;
 }
 
 .ps__historyLeft { flex: 1; min-width: 180px; }
@@ -789,3 +803,71 @@
   font-family: inherit;
 }
 .ps__historyFilter:focus { border-color: var(--ps-accent); }
+
+/* ═════════════════════════════════════════════════════
+   SEARCH BAR
+═════════════════════════════════════════════════════ */
+.ps__searchWrap {
+  position: relative;
+  margin-bottom: 16px;
+  max-width: 420px;
+}
+
+.ps__searchIcon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 14px;
+  pointer-events: none;
+}
+
+.ps__searchInput {
+  width: 100%;
+  padding: 9px 14px 9px 36px;
+  border: 1.5px solid var(--ps-border);
+  border-radius: 8px;
+  font-size: 13px;
+  color: var(--ps-text-dark);
+  outline: none;
+  font-family: inherit;
+  background: white;
+  transition: border-color 0.2s;
+}
+
+.ps__searchInput::placeholder {
+  color: #9ca3af;
+}
+
+.ps__searchInput:focus {
+  border-color: var(--ps-accent);
+}
+
+/* ── History card content wrapping fixes ── */
+.ps__historyLeft {
+  flex: 1;
+  min-width: 180px;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+.ps__historyRight {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  text-align: right;
+  white-space: normal;
+}
+
+.ps__historySubject {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--ps-text-dark);
+  word-wrap: break-word;
+}
+
+.ps__historyMeta {
+  font-size: 12px;
+  color: var(--ps-text-muted);
+  white-space: normal;
+}

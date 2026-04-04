@@ -22,6 +22,7 @@ import { useState, useEffect, useCallback } from "react";
 
 import "./privateClassroom.css";
 import ChatPanel from "./ChatPanel";
+import api from "../../api/apiClient";
 
 /* ═══════════════════════════════════════════════════════════
    HOOKS
@@ -203,6 +204,53 @@ export default function PrivateClassroomUI({ role, session }) {
   const [handRaised, setHandRaised] = useState(false);
   const [raisedHands, setRaisedHands] = useState({});
   const [pinnedIds, setPinnedIds] = useState(new Set());
+  const [chatMessages, setChatMessages] = useState([]);
+
+  // ── Load persisted chat messages on mount ──
+  useEffect(() => {
+    if (!session?.id) return;
+    api.get(`/sessions/${session.id}/chat/`).then((res) => {
+      const msgs = (res.data || []).map((m) => ({
+        id: m.id,
+        sender: m.sender_name,
+        text: m.message,
+        isTeacher: m.sender_role === "teacher",
+        isMe: false,
+        time: new Date(m.created_at),
+      }));
+      setChatMessages(msgs);
+    }).catch(() => {});
+  }, [session?.id]);
+
+  // ── WebSocket for real-time chat updates ──
+  useEffect(() => {
+    if (!session?.id) return;
+    const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+    const wsUrl = `${protocol}//api.shikshacom.com/ws/private-session/${session.id}/chat/`;
+    let ws;
+    try {
+      ws = new WebSocket(wsUrl);
+      ws.onmessage = (event) => {
+        try {
+          const { data } = JSON.parse(event.data);
+          if (data) {
+            setChatMessages((prev) => {
+              if (prev.some((m) => m.id === data.id)) return prev;
+              return [...prev, {
+                id: data.id,
+                sender: data.sender_name,
+                text: data.message,
+                isTeacher: data.sender_role === "teacher",
+                isMe: false,
+                time: new Date(data.created_at),
+              }];
+            });
+          }
+        } catch {}
+      };
+    } catch {}
+    return () => { if (ws) ws.close(); };
+  }, [session?.id]);
 
   // Get all tracks
   const tracks = useTracks([
@@ -213,14 +261,20 @@ export default function PrivateClassroomUI({ role, session }) {
   const screenTracks = tracks.filter((t) => t.source === Track.Source.ScreenShare);
   const cameraTracks = tracks.filter((t) => t.source === Track.Source.Camera);
 
-  // Listen for data messages: raise/lower hand + teacher force mute/disconnect
+  // Listen for data messages: raise/lower hand + teacher force mute/disconnect + chat
   useEffect(() => {
     const decoder = new TextDecoder();
+    const CONTROL_TYPES = ["raise-hand", "RAISE_HAND", "LOWER_HAND", "FORCE_MUTE", "FORCE_DISCONNECT"];
 
     const handleData = (payload, participant) => {
+      const text = decoder.decode(payload);
+      let isControl = false;
+
       try {
-        const msg = JSON.parse(decoder.decode(payload));
+        const msg = JSON.parse(text);
         const id = participant?.identity || msg.sender;
+
+        if (CONTROL_TYPES.includes(msg.type)) isControl = true;
 
         if (msg.type === "RAISE_HAND" && id) {
           setRaisedHands((prev) => ({ ...prev, [id]: true }));
@@ -243,6 +297,12 @@ export default function PrivateClassroomUI({ role, session }) {
           setTimeout(() => room.disconnect(), 1000);
         }
       } catch {}
+
+      // Chat message — not a control message, store it
+      if (!isControl) {
+        const displayName = participant?.name || participant?.identity || "Unknown";
+        setChatMessages((prev) => [...prev, { sender: displayName, text }]);
+      }
     };
 
     room.on("dataReceived", handleData);
@@ -282,6 +342,30 @@ export default function PrivateClassroomUI({ role, session }) {
     );
     setHandRaised(next);
     show(next ? "Hand raised 🖐" : "Hand lowered", "info");
+  };
+
+  const sendChatMessage = async (text) => {
+    // Persist to backend
+    try {
+      const res = await api.post(`/sessions/${session.id}/chat/send/`, { message: text });
+      const msg = res.data;
+      setChatMessages((prev) => [...prev, {
+        id: msg.id,
+        sender: "You",
+        text: msg.message,
+        isMe: true,
+        isTeacher: role === "teacher",
+        time: new Date(msg.created_at),
+      }]);
+    } catch (e) {
+      console.error("Failed to send message:", e);
+      setChatMessages((prev) => [...prev, { sender: "You", text, isMe: true, time: new Date() }]);
+    }
+    // Also broadcast via LiveKit for instant delivery
+    try {
+      const encoder = new TextEncoder();
+      await localParticipant.publishData(encoder.encode(text), { reliable: true });
+    } catch {}
   };
 
   const leaveRoom = async () => {
@@ -469,7 +553,7 @@ export default function PrivateClassroomUI({ role, session }) {
                   raisedHands={raisedHands}
                 />
               ) : (
-                <ChatPanel role={role} />
+                <ChatPanel role={role} messages={chatMessages} onSendMessage={sendChatMessage} />
               )}
             </div>
           </div>

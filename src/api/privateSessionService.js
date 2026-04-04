@@ -76,7 +76,14 @@ const privateSession = {
     return res.data; // { valid, name, user_id, student_id }
   },
 
-  // ── Constants ──
+  // ── Dynamic subject fetching ──
+  async getSubjectsByCourse(courseTitle) {
+    const params = courseTitle ? { course_title: courseTitle } : {};
+    const res = await api.get("/courses/subjects-by-course/", { params });
+    return res.data; // array of { id, name } or grouped object
+  },
+
+  // ── Constants (fallback) ──
   SUBJECTS: ["Mathematics", "Science", "Physics", "Chemistry", "English", "History", "Biology"],
   TIME_SLOTS: [
     { label: "3:00 PM - 5:00 PM", value: "15:00" },
