@@ -226,7 +226,7 @@ export default function PrivateClassroomUI({ role, session }) {
   useEffect(() => {
     if (!session?.id) return;
     const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-    const wsUrl = `${protocol}//api.shikshacom.com/ws/private-session/${session.id}/chat/`;
+    
     let ws;
     try {
       ws = new WebSocket(wsUrl);
@@ -363,8 +363,7 @@ export default function PrivateClassroomUI({ role, session }) {
     }
     // Also broadcast via LiveKit for instant delivery
     try {
-      const encoder = new TextEncoder();
-      await localParticipant.publishData(encoder.encode(text), { reliable: true });
+   
     } catch {}
   };
 
