@@ -20,40 +20,36 @@ export default function LiveSessionDetail() {
           {},
           { signal: controller.signal }
         );
-
         setData(res.data);
       } catch (err) {
         if (err.name !== "CanceledError") {
           console.error(err);
-
           const message =
             err?.response?.data?.detail || "You cannot join this session.";
-
           alert(message);
-          navigate("/live-sessions"); // safer than -1
+          navigate("/live-sessions");
         }
       }
     };
 
     joinSession();
-
     return () => controller.abort();
   }, [id, navigate]);
 
   if (!data) return <div style={{ padding: 20 }}>Joining session...</div>;
 
-  const isTeacher = data.role === "TEACHER";
+  const isPresenter = data.role === "PRESENTER";
 
   return (
     <LiveKitRoom
       serverUrl={data.livekit_url}
       token={data.token}
       connect={true}
-      video={isTeacher}
+      video={isPresenter}
       audio={true}
     >
       <ClassroomUI role={data.role} />
-      {isTeacher && <TeacherControls />}
+      {isPresenter && <TeacherControls />}
       <RoomAudioRenderer />
     </LiveKitRoom>
   );

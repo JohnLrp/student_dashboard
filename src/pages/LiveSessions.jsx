@@ -53,14 +53,12 @@ export default function LiveSessions() {
     fetchData();
   }, [activeCourse]);
 
-  // ✅ FILTER LOGIC
   const filteredSessions = selectedSubject
     ? sessions.filter(
         (s) => String(s.subject_id) === String(selectedSubject)
       )
     : sessions;
 
-  // ✅ FIXED FORMATTERS (NO timezone forcing)
   const formatDateTime = (dateString) => {
     return new Date(dateString).toLocaleString("en-IN", {
       day: "2-digit",
@@ -82,9 +80,12 @@ export default function LiveSessions() {
     const status = session.computed_status;
 
     if (status === "LIVE") return "🔴 Live Now";
-    if (status === "SCHEDULED")
-      return `Starts at ${formatTime(session.start_time)}`;
-    if (status === "COMPLETED") return "Completed";
+    if (status === "SCHEDULED") return `Starts at ${formatTime(session.start_time)}`;
+    if (status === "COMPLETED") return "✅ Completed";
+    if (status === "PAUSED") return "⏸ Paused — teacher stepped away";
+    if (status === "RECONNECTING") return "🔄 Teacher reconnecting...";
+    if (status === "WAITING_FOR_TEACHER") return "⏳ Waiting for teacher";
+    if (status === "CANCELLED") return "🚫 Cancelled";
     return status;
   };
 
@@ -149,9 +150,7 @@ export default function LiveSessions() {
                 <div className="liveCardBody">
                   <p className="liveCardText">{s.title}</p>
                   <p className="liveCardText">{s.teacher}</p>
-                  <p className="liveCardText">
-                    {formatDateTime(s.start_time)}
-                  </p>
+                  <p className="liveCardText">{formatDateTime(s.start_time)}</p>
                   <p className="liveCardText">{formatStatus(s)}</p>
                 </div>
               </div>
