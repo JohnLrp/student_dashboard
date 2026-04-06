@@ -6,16 +6,19 @@ export default function RaiseHandButton() {
   const [raised, setRaised] = useState(false);
 
   const toggleHand = async () => {
-    const encoder = new TextEncoder();
+    // ✅ FIX: use lowercase to match ClassroomUI listener
+    const type = raised ? "lower-hand" : "raise-hand";
 
-    const type = raised ? "LOWER_HAND" : "RAISE_HAND";
-
-    await room.localParticipant.publishData(
-      encoder.encode(JSON.stringify({ type })),
-      { reliable: true }
-    );
-
-    setRaised(!raised);
+    try {
+      const encoder = new TextEncoder();
+      await room.localParticipant.publishData(
+        encoder.encode(JSON.stringify({ type })),
+        { reliable: true }
+      );
+      setRaised(!raised);
+    } catch (e) {
+      console.error("raise-hand failed", e);
+    }
   };
 
   return (
@@ -24,7 +27,7 @@ export default function RaiseHandButton() {
       onClick={toggleHand}
       title={raised ? "Lower hand" : "Raise hand"}
     >
-      {raised ? "👇" : "✋"}
+      {raised ? "👇 Lower Hand" : "✋ Raise Hand"}
     </button>
   );
 }
